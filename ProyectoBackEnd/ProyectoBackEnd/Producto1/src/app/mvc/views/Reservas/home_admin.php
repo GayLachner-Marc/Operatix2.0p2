@@ -25,17 +25,17 @@
     <!-- Menú de opciones -->
     <div class="menu">
         <ul>
-            <li><a href="calendario_reservas_admin.php">Ver Calendario de Reservas</a></li>
-            <li><a href="crear_reserva_admin.php">Crear Nueva Reserva</a></li>
-            <li><a href="gestionar_usuarios.php">Gestionar Usuarios</a></li>
-            <li><a href="gestionar_hoteles.php">Gestionar Hoteles</a></li>
-            <li><a href="gestionar_vehiculos.php">Gestionar Vehículos</a></li>
-            <li><a href="reportes.php">Ver Reportes de Actividad</a></li>
+            <li><a href="/reserva/calendario">Ver Calendario de Reservas</a></li>
+            <li><a href="/reserva/crear">Crear Nueva Reserva</a></li>
+            <li><a href="/admin/usuarios">Gestionar Usuarios</a></li>
+            <li><a href="/admin/hoteles">Gestionar Hoteles</a></li>
+            <li><a href="/admin/vehiculos">Gestionar Vehículos</a></li>
+            <li><a href="/admin/reportes">Ver Reportes de Actividad</a></li>
         </ul>
     </div>
 
     <!-- Enlace para cerrar sesión -->
-    <p><a href="logout.php">Cerrar sesión</a></p>
+    <p><a href="/cliente/logout">Cerrar sesión</a></p>
 
 </body>
 </html>

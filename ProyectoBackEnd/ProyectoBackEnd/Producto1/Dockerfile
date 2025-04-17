@@ -11,7 +11,8 @@ RUN a2enmod rewrite
 COPY ./src /var/www/html
 
 # Cambiar la raíz del documento de Apache a /var/www/html/public
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/app|' /etc/apache2/sites-available/000-default.conf
+RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
+
 
 # Establecer permisos apropiados para la carpeta de la app
 RUN chown -R www-data:www-data /var/www/html
