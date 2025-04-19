@@ -4,30 +4,24 @@ FROM php:8.2-apache
 # Instalar las extensiones necesarias
 RUN docker-php-ext-install mysqli pdo pdo_mysql
 
-# Habilitar mod_rewrite de Apache (necesario para algunas aplicaciones PHP)
+# Habilitar mod_rewrite de Apache
 RUN a2enmod rewrite
 
-# Copiar todos los archivos de la app PHP al contenedor
+# Copiar archivos del proyecto
 COPY ./src /var/www/html
 
-# Cambiar la raíz del documento de Apache a /var/www/html/public
-RUN sed -i 's|DocumentRoot /var/www/html|DocumentRoot /var/www/html/public|' /etc/apache2/sites-available/000-default.conf
+# (❌ ELIMINADA línea que cambiaba DocumentRoot a /public)
 
-
-# Establecer permisos apropiados para la carpeta de la app
-RUN chown -R www-data:www-data /var/www/html
-RUN chmod -R 755 /var/www/html
-
-# Permitir el uso de .htaccess en la configuración de Apache
+# Permitir uso de .htaccess
 RUN sed -i 's/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
 
-# Agregar directiva Directory para permitir acceso a /var/www/html/public
-RUN echo "<Directory /var/www/html/app>\n    Options Indexes FollowSymLinks\n    AllowOverride All\n    Require all granted\n</Directory>" >> /etc/apache2/apache2.conf
+# Configuración explícita del acceso
+RUN echo "<Directory /var/www/html>\n    Options Indexes FollowSymLinks\n    AllowOverride All\n    Require all granted\n</Directory>" >> /etc/apache2/apache2.conf
 
-# Exponer el puerto 80
+# Establecer permisos adecuados
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
+
 EXPOSE 80
 
-# Iniciar Apache en primer plano
 CMD ["apache2-foreground"]
-
-

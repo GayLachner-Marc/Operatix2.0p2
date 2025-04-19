@@ -1,23 +1,26 @@
 <?php
-// Incluir el archivo del controlador para acceder a la lógica
-require_once 'controllers/ReservaController.php';
+if (session_status() === PHP_SESSION_NONE) session_start();
 
-// Verificar si el ID de la reserva está presente en la URL
-if (isset($_GET['id'])) {
-    // Obtener el ID de la reserva desde la URL
+require_once __DIR__ . '/../../controllers/ReservaController.php';
+
+use app\mvc\controllers\ReservaController;
+
+if (isset($_SESSION['cliente_id']) && isset($_GET['id'])) {
     $id_reserva = $_GET['id'];
-
-    // Crear una instancia del controlador ReservaController
     $controller = new ReservaController();
 
-    // Llamar al método eliminarReserva pasando el ID de la reserva
+    // Verificar si es administrador o cliente
+    if ($_SESSION['tipo_cliente'] === 'administrador') {
+        $redirect = '/admin/home';  // o '/reserva/listar' si tienes una vista para admins
+    } else {
+        $redirect = '/reserva/listar';
+    }
+
     $controller->eliminarReserva($id_reserva);
-    
-    // Redirigir a la lista de reservas después de eliminar
-    header("Location: listar.php");
+
+    header("Location: $redirect");
     exit;
 } else {
-    // Si no se pasa el ID de la reserva, mostrar un error o redirigir
-    echo "No se ha encontrado la reserva.";
+    echo "⚠️ No tienes permiso para realizar esta acción o falta el ID de la reserva.";
 }
 ?>

@@ -6,14 +6,14 @@ class Vehiculo
 {
 
     private $id_vehiculo;
-    private $descripcion;
+    private $description;
     private $email_conductor;
     private $password;
 
-    public function __construct($id_vehiculo, $descripcion, $email_conductor, $password)
+    public function __construct($id_vehiculo, $description, $email_conductor, $password)
     {
         $this->id_vehiculo = $id_vehiculo;
-        $this->descripcion = $descripcion;
+        $this->description = $description;
         $this->email_conductor = $email_conductor;
         $this->password = $password;
     }
@@ -23,9 +23,9 @@ class Vehiculo
         return $this->id_vehiculo;
     }
 
-    public function getDescripcion()
+    public function getDescription()
     {
-        return $this->descripcion;
+        return $this->description;
     }
 
     public function getEmailConductor()
@@ -38,7 +38,7 @@ class Vehiculo
         return $this->password;
     }
 
-    public function setDescripcion($descripcion)
+    public function setDescription($description)
     {
         $this->descripcion = $descripcion;
     }

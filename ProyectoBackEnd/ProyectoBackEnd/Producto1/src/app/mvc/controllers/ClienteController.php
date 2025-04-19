@@ -22,33 +22,63 @@ class ClienteController
     public function registrarCliente($data)
     {
         try {
+            // Validar campos requeridos
+            $camposRequeridos = ['nombre', 'apellido1', 'direccion', 'codigoPostal', 'ciudad', 'pais', 'email', 'password', 'confirm_password', 'tipo_cliente'];
+            foreach ($camposRequeridos as $campo) {
+                if (empty($data[$campo])) {
+                    $_SESSION['error'] = "Todos los campos marcados son obligatorios.";
+                    header('Location: /cliente/registro');
+                    exit();
+                }
+            }
+    
+            // Validar contraseñas
+            if ($data['password'] !== $data['confirm_password']) {
+                $_SESSION['error'] = "Las contraseñas no coinciden.";
+                header('Location: /cliente/registro');
+                exit();
+            }
+    
+            // Verificar si el correo ya existe
+            $stmt = $this->pdo->prepare("SELECT id_viajero FROM transfer_viajeros WHERE email = ?");
+            $stmt->execute([$data['email']]);
+            if ($stmt->fetch()) {
+                $_SESSION['error'] = "Ya existe un usuario registrado con ese correo.";
+                header('Location: /cliente/registro');
+                exit();
+            }
+    
+            // Insertar nuevo cliente
             $stmt = $this->pdo->prepare("
                 INSERT INTO transfer_viajeros (nombre, apellido1, apellido2, direccion, codigoPostal, ciudad, pais, email, password, tipo_cliente)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
-
+    
             $passwordHasheada = password_hash($data['password'], PASSWORD_DEFAULT);
-
+    
             $stmt->execute([
                 $data['nombre'],
                 $data['apellido1'],
-                $data['apellido2'],
+                $data['apellido2'] ?? '',
                 $data['direccion'],
                 $data['codigoPostal'],
                 $data['ciudad'],
                 $data['pais'],
                 $data['email'],
                 $passwordHasheada,
-                $data['tipo_cliente'] ?? 'particular'
+                $data['tipo_cliente']
             ]);
-
-            $_SESSION['mensaje'] = "Cliente registrado con éxito.";
+    
+            $_SESSION['success'] = "Cliente registrado con éxito. ¡Ahora puedes iniciar sesión!";
             header('Location: /cliente/login');
             exit();
+            
         } catch (PDOException $e) {
-            echo "Error al registrar cliente: " . $e->getMessage();
+            $_SESSION['error'] = "Error al registrar cliente: " . $e->getMessage();
+            header('Location: /cliente/registro');
+            exit();
         }
-    }
+    }    
 
     public function obtenerClientePorId($id)
     {
@@ -57,7 +87,7 @@ class ClienteController
             $stmt->execute([$id]);
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            echo "Error al obtener los datos del cliente: " . $e->getMessage();
+            echo "Error al obtener el cliente: " . $e->getMessage();
         }
     }
 
@@ -105,24 +135,22 @@ class ClienteController
             $stmt = $this->pdo->prepare("SELECT * FROM transfer_viajeros WHERE email = ?");
             $stmt->execute([$correo]);
             $fila = $stmt->fetch();
-
             if ($fila && password_verify($password, $fila['password'])) {
                 $_SESSION['cliente_id'] = $fila['id_viajero'];
                 $_SESSION['cliente_nombre'] = $fila['nombre'];
-                $_SESSION['tipo_cliente'] = $fila['tipo_cliente'];
-                $_SESSION['email'] = $fila['email']; // ✅ AÑADE ESTO
+                $_SESSION['tipo_cliente'] = $fila['tipo_cliente'] ?? 'cliente';
+                $_SESSION['email'] = $fila['email'];
 
-
-                if ($fila['tipo_cliente'] === 'administrador') {
+                if ($_SESSION['tipo_cliente'] === 'administrador') {
                     header("Location: /admin/home");
-                } elseif ($fila['tipo_cliente'] === 'corporativo') {
-                    header("Location: /corporativo/home");
                 } else {
                     header("Location: /cliente/home");
                 }
                 exit();
             } else {
-                echo "Credenciales incorrectas.";
+                $_SESSION['error'] = "Credenciales incorrectas.";
+                header("Location: /cliente/login");
+                exit();
             }
         } catch (PDOException $e) {
             echo "Error al autenticar el cliente: " . $e->getMessage();
@@ -145,21 +173,44 @@ class ClienteController
         try {
             $stmt = $this->pdo->prepare("DELETE FROM transfer_viajeros WHERE id_viajero = ?");
             $stmt->execute([$id]);
-            header('Location: /admin/usuarios');
+            header("Location: /admin/usuarios");
             exit();
         } catch (PDOException $e) {
             echo "Error al eliminar el cliente: " . $e->getMessage();
         }
     }
-
-    public function editarCliente($id)
+    
+    public function editarPerfil($data)
     {
         try {
-            $stmt = $this->pdo->prepare("SELECT * FROM transfer_viajeros WHERE id_viajero = ?");
-            $stmt->execute([$id]);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
+            $id = $_SESSION['cliente_id'];
+            $nombre = $data['nombre'] ?? '';
+            $email = $data['email'] ?? '';
+            $password = $data['password'] ?? null;
+
+            if (empty($nombre) || empty($email)) {
+                echo "Nombre y correo son obligatorios.";
+                return;
+            }
+
+            if ($password) {
+                // Si se envía contraseña, actualizar también
+                $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+                $stmt = $this->pdo->prepare("UPDATE transfer_viajeros SET nombre = ?, email = ?, password = ? WHERE id_viajero = ?");
+                $stmt->execute([$nombre, $email, $passwordHash, $id]);
+            } else {
+                // Si no, solo nombre y correo
+                $stmt = $this->pdo->prepare("UPDATE transfer_viajeros SET nombre = ?, email = ? WHERE id_viajero = ?");
+                $stmt->execute([$nombre, $email, $id]);
+            }
+
+            // Actualizar sesión si el correo ha cambiado
+            $_SESSION['email'] = $email;
+
+            echo "Perfil actualizado correctamente.";
+
         } catch (PDOException $e) {
-            echo "Error al obtener el cliente: " . $e->getMessage();
+            echo "Error al actualizar el perfil: " . $e->getMessage();
         }
     }
 }

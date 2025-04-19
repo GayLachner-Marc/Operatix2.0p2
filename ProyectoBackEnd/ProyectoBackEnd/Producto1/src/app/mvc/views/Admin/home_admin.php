@@ -26,7 +26,7 @@
     <div class="menu">
         <ul>
             <li><a href="/reserva/calendario">Ver Calendario de Reservas</a></li>
-            <li><a href="/reserva/crear">Crear Nueva Reserva</a></li>
+            <li><a href="/reserva/crear/admin">Crear Nueva Reserva</a></li>
             <li><a href="/admin/usuarios">Gestionar Usuarios</a></li>
             <li><a href="/admin/hoteles">Gestionar Hoteles</a></li>
             <li><a href="/admin/vehiculos">Gestionar Vehículos</a></li>

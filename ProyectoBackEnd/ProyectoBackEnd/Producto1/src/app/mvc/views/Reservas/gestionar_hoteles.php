@@ -1,8 +1,15 @@
+<?php if (session_status() === PHP_SESSION_NONE) session_start(); ?>
+<?php if (!isset($_SESSION['tipo_cliente']) || $_SESSION['tipo_cliente'] !== 'administrador') {
+    header('Location: /cliente/login');
+    exit;
+} ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <title>Gestión de Hoteles</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
@@ -29,8 +36,8 @@
                         <td><?= htmlspecialchars($hotel['Comision']) ?>%</td>
                         <td><?= htmlspecialchars($hotel['usuario']) ?></td>
                         <td>
-                            <a href="/admin/hoteles/editar?id=<?= $hotel['id_hotel'] ?>">Editar</a> |
-                            <a href="/admin/hoteles/eliminar?id=<?= $hotel['id_hotel'] ?>" onclick="return confirm('¿Estás seguro de eliminar este hotel?')">Eliminar</a>
+                            <a href="/admin/hoteles/editar?id=<?= urlencode($hotel['id_hotel']) ?>">Editar</a> |
+                            <a href="/admin/hoteles/eliminar?id=<?= urlencode($hotel['id_hotel']) ?>" onclick="return confirm('¿Estás seguro de eliminar este hotel?')">Eliminar</a>
                         </td>
                     </tr>
                 <?php endforeach; ?>
@@ -40,7 +47,7 @@
         </tbody>
     </table>
 
-    <p><a href="/admin/home">← Volver al panel</a></p>
+    <p><a href="/admin/home">← Volver al Panel de Administración</a></p>
 
 </body>
 </html>

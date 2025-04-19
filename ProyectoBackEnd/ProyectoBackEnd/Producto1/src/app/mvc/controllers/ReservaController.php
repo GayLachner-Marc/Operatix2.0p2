@@ -22,32 +22,20 @@ class ReservaController
         try {
             $stmt = $this->pdo->query("SELECT * FROM transfer_reservas");
 
-            while ($fila = $stmt->fetch()) {
-                $reserva = new Reserva(
-                    $fila['id_reserva'],
-                    $fila['localizador'],
-                    $fila['id_hotel'],
-                    $fila['id_tipo_reserva'],
-                    $fila['email_cliente'],
-                    $fila['fecha_reserva'],
-                    $fila['fecha_modificacion'],
-                    $fila['id_destino'],
-                    $fila['fecha_entrada'],
-                    $fila['hora_entrada'],
-                    $fila['numero_vuelo_entrada'],
-                    $fila['origen_vuelo_entrada'],
-                    $fila['hora_vuelo_salida'],
-                    $fila['fecha_vuelo_salida'],
-                    $fila['num_viajeros'],
-                    $fila['id_vehiculo']
-                );
+            $reservas = [];
 
-                echo "Reserva Localizador: " . $reserva->getLocalizador() . "<br>";
+            while ($fila = $stmt->fetch(PDO::FETCH_ASSOC)) {
+                $reservas[] = $fila; // puedes devolver el array directamente
             }
+
+            return $reservas;
+
         } catch (PDOException $e) {
             echo "Error al obtener las reservas: " . $e->getMessage();
+            return []; // devuelve array vacío en caso de error
         }
     }
+
 
     public function crearReserva($data)
     {
@@ -60,42 +48,45 @@ class ReservaController
                     return;
                 }
             }
-    
+
             // Validación de la fecha de entrada
             if (!strtotime($data['fecha_entrada'])) {
                 echo "Fecha de entrada no válida.";
                 return;
             }
-    
+
             // Validar número de viajeros
             if (!is_numeric($data['num_viajeros']) || $data['num_viajeros'] < 1) {
                 echo "Número de viajeros no válido.";
                 return;
             }
-    
-            // Validar y formatear hora de vuelo salida
-            $horaVueloSalida = null;
-            if (!empty($data['hora_vuelo_salida'])) {
-                if (!preg_match('/^\d{2}:\d{2}$/', $data['hora_vuelo_salida'])) {
+
+            // Formatear hora de entrada como TIME
+            $horaEntrada = null;
+            if (!empty($data['hora_entrada']) && preg_match('/^\d{2}:\d{2}$/', $data['hora_entrada'])) {
+                $horaEntrada = $data['hora_entrada'] . ':00';
+            }
+
+            // Combinar fecha y hora de vuelo salida como DATETIME
+            $fechaHoraVueloSalida = null;
+            if (!empty($data['fecha_vuelo_salida']) && !empty($data['hora_vuelo_salida'])) {
+                if (preg_match('/^\d{2}:\d{2}$/', $data['hora_vuelo_salida'])) {
+                    $fechaHoraVueloSalida = $data['fecha_vuelo_salida'] . ' ' . $data['hora_vuelo_salida'] . ':00';
+                } else {
                     echo "Hora del vuelo no válida. Usa formato HH:MM.";
                     return;
                 }
-                $horaVueloSalida = $data['hora_vuelo_salida'] . ':00';
             }
-    
-            // Validar y formatear hora de entrada
-            $horaEntrada = null;
-            if (!empty($data['hora_entrada'])) {
-                if (!preg_match('/^\d{2}:\d{2}$/', $data['hora_entrada'])) {
-                    echo "Hora de entrada no válida. Usa formato HH:MM.";
-                    return;
-                }
-                $horaEntrada = $data['hora_entrada'] . ':00';
-            }
-    
+
             // Generar localizador único
             $localizador = strtoupper(bin2hex(random_bytes(4)));
-    
+
+            // Determinar destino: usar el destino si viene, o el hotel como fallback
+            $idDestino = isset($data['id_destino']) ? (int)$data['id_destino'] : (int)$data['id_hotel'];
+
+            // Vehículo opcional
+            $idVehiculo = isset($data['id_vehiculo']) ? (int)$data['id_vehiculo'] : null;
+
             // Consulta de inserción
             $stmt = $this->pdo->prepare("INSERT INTO transfer_reservas (
                 localizador, id_hotel, id_tipo_reserva, email_cliente,
@@ -103,31 +94,32 @@ class ReservaController
                 numero_vuelo_entrada, origen_vuelo_entrada, hora_vuelo_salida, fecha_vuelo_salida,
                 num_viajeros, id_vehiculo
             ) VALUES (?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    
+
             // Ejecutar la consulta
             $stmt->execute([
                 $localizador,
-                $data['id_hotel'],
-                $data['id_tipo_reserva'],
+                (int)$data['id_hotel'],
+                (int)$data['id_tipo_reserva'],
                 $data['email_cliente'],
-                $data['id_destino'] ?? $data['id_hotel'],
+                $idDestino,
                 $data['fecha_entrada'],
                 $horaEntrada,
                 $data['numero_vuelo_entrada'],
                 $data['origen_vuelo_entrada'] ?? null,
-                $horaVueloSalida,
+                $fechaHoraVueloSalida,
                 $data['fecha_vuelo_salida'] ?? null,
-                $data['num_viajeros'],
-                $data['id_vehiculo'] ?? null
+                (int)$data['num_viajeros'],
+                $idVehiculo
             ]);
-    
-            echo "Reserva creada con éxito.";
-    
+
+            // Redirigir a lista de reservas
+            header("Location: /reserva/listar");
+            exit();
+
         } catch (PDOException $e) {
-            echo "Error al crear la reserva: " . $e->getMessage();
+            echo "❌ Error al crear la reserva: " . $e->getMessage();
         }
     }
-    
 
     public function verReserva($id_reserva)
     {

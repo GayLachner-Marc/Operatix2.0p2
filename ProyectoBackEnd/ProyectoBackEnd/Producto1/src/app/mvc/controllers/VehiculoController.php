@@ -1,9 +1,11 @@
 <?php
 // Incluir el modelo de Vehiculo para interactuar con la base de datos
 namespace app\mvc\controllers;
-use Vehiculo;
+
+use app\mvc\models\Vehiculo;
 
 require_once __DIR__ . '/../models/Vehiculo.php';
+
 
 // Controlador para las operaciones relacionadas con los vehículos
 class VehiculoController
@@ -29,7 +31,7 @@ class VehiculoController
                 // Creamos un objeto Vehiculo por cada fila de la base de datos
                 $vehiculo = new Vehiculo(
                     $fila['id_vehiculo'],
-                    $fila['Descripcion'],
+                    $fila['description'],
                     $fila['email_conductor'],
                     $fila['password']
                 );
@@ -56,14 +58,14 @@ class VehiculoController
                 // Creamos el objeto Vehiculo con los datos encontrados
                 $vehiculo = new Vehiculo(
                     $fila['id_vehiculo'],
-                    $fila['Descripcion'],
+                    $fila['description'],
                     $fila['email_conductor'],
                     $fila['password']
                 );
 
                 // Mostrar detalles del vehículo
                 echo "ID Vehículo: " . $vehiculo->getIdVehiculo() . "<br>";
-                echo "Descripción: " . $vehiculo->getDescripcion() . "<br>";
+                echo "description: " . $vehiculo->getDescription() . "<br>";
                 echo "Email Conductor: " . $vehiculo->getEmailConductor() . "<br>";
             } else {
                 echo "Vehículo no encontrado.";
@@ -75,36 +77,37 @@ class VehiculoController
     }
 
     // Método para registrar un nuevo vehículo (admin)
-    public function registrarVehiculo($data)
+ 
+    public function crearVehiculo($data)
     {
-        // Validamos los datos antes de insertarlos
-        if (!isset($data['descripcion'], $data['email_conductor'], $data['password'])) {
-            echo "Faltan datos necesarios.";
-            return;
-        }
+    // Verificamos que tengamos los datos necesarios para la creación
+      if (!isset($data['description'], $data['email_conductor'], $data['password'])) {
+        echo "Faltan datos para crear el vehículo.";
+        return;
+    }
 
-        try {
-            // Usamos un statement preparado para evitar inyecciones SQL
-            $stmt = $this->pdo->prepare("INSERT INTO transfer_vehiculo (Descripcion, email_conductor, password) VALUES (?, ?, ?)");
+      try {
+        // Usamos un statement preparado para evitar inyecciones SQL
+        $stmt = $this->pdo->prepare("INSERT INTO transfer_vehiculo (Descripcion, email_conductor, password) VALUES (?, ?, ?)");
 
-            // Ejecutamos la consulta con los valores del formulario
-            $stmt->execute([
-                $data['descripcion'],
-                $data['email_conductor'],
-                $data['password']
-            ]);
+        // Ejecutamos la consulta con los valores del formulario
+        $stmt->execute([
+            $data['description'],
+            $data['email_conductor'],
+            $data['password']
+        ]);
 
-            echo "Vehículo registrado con éxito.";
-        } catch (PDOException $e) {
-            echo "Error al registrar el vehículo: " . $e->getMessage();
-        }
+        echo "Vehículo creado con éxito.";
+      } catch (PDOException $e) {
+        echo "Error al crear el vehículo: " . $e->getMessage();
+      }
     }
 
     // Método para actualizar la información de un vehículo
     public function actualizarVehiculo($data)
     {
         // Verificamos que tengamos los datos necesarios para la actualización
-        if (!isset($data['id_vehiculo'], $data['descripcion'], $data['email_conductor'], $data['password'])) {
+        if (!isset($data['id_vehiculo'], $data['description'], $data['email_conductor'], $data['password'])) {
             echo "Faltan datos para actualizar el vehículo.";
             return;
         }
@@ -115,7 +118,7 @@ class VehiculoController
 
             // Ejecutamos la consulta para actualizar la fila correspondiente
             $stmt->execute([
-                $data['descripcion'],
+                $data['description'],
                 $data['email_conductor'],
                 $data['password'],
                 $data['id_vehiculo']
@@ -126,6 +129,55 @@ class VehiculoController
             echo "Error al actualizar el vehículo: " . $e->getMessage();
         }
     }
+    public function obtenerTodosLosVehiculos()
+    {
+    
+        try {
+
+             $stmt = $this->pdo->query("SELECT * FROM transfer_vehiculo");
+             return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        } catch (\PDOException $e) {
+           echo "Error al obtener los vehículos: " . $e->getMessage();
+        return [];
+    }
+    }
+    public function eliminarVehiculo($id)
+    {
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM transfer_precios WHERE id_vehiculo = ?");
+            $stmt->execute([$id]);
+    
+            $stmt = $this->pdo->prepare("DELETE FROM transfer_vehiculo WHERE id_vehiculo = ?");
+            $stmt->execute([$id]);
+    
+        } catch (\PDOException $e) {
+            // Puedes guardar este mensaje en sesión o log
+            $_SESSION['error_eliminar'] = $e->getMessage();
+        }
+    }
+    
+    // Método para mostrar el formulario de edición de un vehículo
+public function editarVehiculo($id_vehiculo)
+{
+    try {
+        $stmt = $this->pdo->prepare("SELECT * FROM transfer_vehiculo WHERE id_vehiculo = ?");
+        $stmt->execute([$id_vehiculo]);
+
+        $vehiculo = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($vehiculo) {
+            // Cargamos la vista del formulario de edición
+            require_once __DIR__ . '/../views/vehiculos/editar.php';
+        } else {
+            echo "Vehículo no encontrado.";
+        }
+
+    } catch (\PDOException $e) {
+        echo "Error al cargar el vehículo para edición: " . $e->getMessage();
+    }
+}
+
+
 }
 
 ?>

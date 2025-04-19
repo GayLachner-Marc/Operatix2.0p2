@@ -1,93 +1,86 @@
-<!-- crear_reserva_admin.php -->
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+
+if (!isset($_SESSION['cliente_id'])) {
+    header("Location: /cliente/login");
+    exit();
+}
+
+$tipo_cliente = $_SESSION['tipo_cliente'] ?? 'cliente';
+$volver_url = ($tipo_cliente === 'administrador') ? '/admin/home' : '/cliente/home';
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <!-- Codificación de caracteres UTF-8 para soportar caracteres especiales -->
     <meta charset="UTF-8">
-    
-    <!-- Meta para que la página sea responsiva -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Título de la página -->
     <title>Crear Reserva</title>
-    
-    <!-- Enlace a los estilos CSS para dar formato a la página -->
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        form {
+            max-width: 600px;
+            margin: auto;
+        }
+        label, input, select, button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Título principal de la página -->
-    <h2>Crear Nueva Reserva</h2>
+<h2>Crear Nueva Reserva</h2>
 
-    <!-- Formulario para crear una nueva reserva -->
-    <form action="crear_reserva_admin.php" method="POST">
-        
-        <!-- Campo para seleccionar el tipo de reserva (aeropuerto a hotel, hotel a aeropuerto, ida y vuelta) -->
-        <label for="tipo_reserva">Tipo de Trayecto:</label>
-        <select id="tipo_reserva" name="tipo_reserva" required>
-            <option value="aeropuerto_hotel">De Aeropuerto a Hotel</option>
-            <option value="hotel_aeropuerto">De Hotel a Aeropuerto</option>
-            <option value="ida_vuelta">Ida y vuelta</option>
-        </select>
-        
-        <!-- Campo para seleccionar la fecha de entrada -->
-        <label for="fecha_entrada">Fecha de Entrada:</label>
-        <input type="date" id="fecha_entrada" name="fecha_entrada" required>
-        
-        <!-- Campo para seleccionar la hora de entrada -->
-        <label for="hora_entrada">Hora de Entrada:</label>
-        <input type="time" id="hora_entrada" name="hora_entrada" required>
-        
-        <!-- Campo para número de viajeros -->
-        <label for="num_viajeros">Número de Viajeros:</label>
-        <input type="number" id="num_viajeros" name="num_viajeros" required>
-        
-        <!-- Campo para seleccionar el hotel (destino) -->
-        <label for="id_hotel">Hotel de Destino:</label>
-        <select id="id_hotel" name="id_hotel" required>
-            <!-- Aquí debes llenar las opciones con los hoteles disponibles -->
-            <option value="1">Hotel Playa</option>
-            <option value="2">Hotel Centro</option>
-            <option value="3">Hotel Montaña</option>
-        </select>
+<form action="/reserva/crear" method="POST">
+    <label for="id_tipo_reserva">Tipo de Trayecto:</label>
+    <select id="id_tipo_reserva" name="id_tipo_reserva" required>
+        <option value="1">De Aeropuerto a Hotel</option>
+        <option value="2">De Hotel a Aeropuerto</option>
+        <option value="3">Ida y Vuelta</option>
+    </select>
 
-        <!-- Campo para el número de vuelo (en caso de trayecto de aeropuerto a hotel o ida y vuelta) -->
-        <label for="numero_vuelo">Número de Vuelo:</label>
-        <input type="text" id="numero_vuelo" name="numero_vuelo">
-        
-        <!-- Campo para la hora del vuelo (si aplica) -->
-        <label for="hora_vuelo">Hora del Vuelo:</label>
-        <input type="time" id="hora_vuelo" name="hora_vuelo">
-        
-        <!-- Campo para seleccionar el origen del vuelo (si aplica) -->
-        <label for="origen_vuelo">Origen del Vuelo:</label>
-        <input type="text" id="origen_vuelo" name="origen_vuelo">
-        
-        <!-- Campo para ingresar los datos del cliente (si aún no están registrados) -->
-        <label for="email_cliente">Correo del Cliente:</label>
-        <input type="email" id="email_cliente" name="email_cliente" required>
+    <label for="fecha_entrada">Fecha de Entrada:</label>
+    <input type="date" id="fecha_entrada" name="fecha_entrada" required max="2099-12-31">
 
-        <!-- Botón para crear la reserva -->
-        <button type="submit" name="submit">Crear Reserva</button>
-    </form>
+    <label for="hora_entrada">Hora de Entrada:</label>
+    <input type="time" id="hora_entrada" name="hora_entrada" required>
 
-    <!-- Bloque PHP para mostrar errores -->
-    <?php
-    // Si la variable $error está definida, significa que hubo un problema al crear la reserva
-    if (isset($error)) {
-        // Muestra el error en rojo
-        echo "<p style='color:red;'>$error</p>";
-    }
+    <label for="num_viajeros">Número de Viajeros:</label>
+    <input type="number" id="num_viajeros" name="num_viajeros" required min="1">
 
-    // Si la variable $success está definida, significa que la reserva fue creada correctamente
-    if (isset($success)) {
-        // Muestra un mensaje de éxito en verde
-        echo "<p style='color:green;'>Reserva creada con éxito.</p>";
-    }
-    ?>
+    <label for="id_hotel">Hotel de Destino:</label>
+    <select id="id_hotel" name="id_hotel" required>
+        <option value="1">Hotel Playa</option>
+        <option value="2">Hotel Centro</option>
+        <option value="3">Hotel Montaña</option>
+    </select>
 
-    <!-- Enlace para volver al Panel de Administración -->
-    <p><a href="/cliente/home">Volver al Panel de Administración</a></p>
+    <label for="numero_vuelo_entrada">Número de Vuelo:</label>
+    <input type="text" id="numero_vuelo_entrada" name="numero_vuelo_entrada" required>
+
+    <label for="hora_vuelo_salida">Hora del Vuelo:</label>
+    <input type="time" id="hora_vuelo_salida" name="hora_vuelo_salida">
+
+    <label for="origen_vuelo_entrada">Origen del Vuelo:</label>
+    <input type="text" id="origen_vuelo_entrada" name="origen_vuelo_entrada">
+
+    <?php if (isset($_SESSION['email'])): ?>
+        <input type="hidden" name="email_cliente" value="<?= htmlspecialchars($_SESSION['email']) ?>">
+    <?php else: ?>
+        <p style="color:red;">⚠️ No hay correo en la sesión. Por favor vuelve a iniciar sesión.</p>
+    <?php endif; ?>
+
+    <input type="hidden" name="id_destino" value="1">
+    <input type="hidden" name="fecha_vuelo_salida" value="<?= date('Y-m-d') ?>">
+    <input type="hidden" name="id_vehiculo" value="1">
+
+    <button type="submit" name="submit">Crear Reserva</button>
+</form>
+
+<p><a href="<?= $volver_url ?>">← Volver al Panel</a></p>
 
 </body>
 </html>
