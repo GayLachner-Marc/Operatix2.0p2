@@ -10,6 +10,15 @@
 
     <h1>Gestión de Usuarios</h1>
 
+    <?php if (isset($_SESSION['mensaje'])): ?>
+    <p style="color: green;">✅ <?= htmlspecialchars($_SESSION['mensaje']) ?></p>
+    <?php unset($_SESSION['mensaje']); ?>
+<?php elseif (isset($_SESSION['error'])): ?>
+    <p style="color: red;">❌ <?= htmlspecialchars($_SESSION['error']) ?></p>
+    <?php unset($_SESSION['error']); ?>
+<?php endif; ?>
+
+
     <p>Aquí el administrador podrá ver, modificar o eliminar usuarios del sistema.</p>
 
     <table>

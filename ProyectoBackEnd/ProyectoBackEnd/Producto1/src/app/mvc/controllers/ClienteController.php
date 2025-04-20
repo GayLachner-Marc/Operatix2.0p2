@@ -94,38 +94,59 @@ class ClienteController
     public function modificarCliente($id, $data, $redirect = '/cliente/perfil')
     {
         try {
+            if (empty($id)) {
+                $_SESSION['error'] = "❌ ID de usuario no proporcionado.";
+                header("Location: /admin/usuarios");
+                exit();
+            }
+    
             $campos = [];
             $valores = [];
-
+    
             if (!empty($data['nombre'])) {
                 $campos[] = "nombre = ?";
                 $valores[] = $data['nombre'];
             }
-
+    
             if (!empty($data['correo'])) {
                 $campos[] = "email = ?";
                 $valores[] = $data['correo'];
             }
-
+    
             if (!empty($data['password'])) {
-                $campos[] = "password = ?";
-                $valores[] = password_hash($data['password'], PASSWORD_DEFAULT);
+                if (!empty($data['confirm_password']) && $data['password'] === $data['confirm_password']) {
+                    $campos[] = "password = ?";
+                    $valores[] = password_hash($data['password'], PASSWORD_DEFAULT);
+                } else {
+                    $_SESSION['error'] = "⚠️ Las contraseñas no coinciden.";
+                    header("Location: /admin/usuarios/editar?id=" . $id);
+                    exit();
+                }
             }
-
+    
             if (!empty($campos)) {
                 $valores[] = $id;
                 $sql = "UPDATE transfer_viajeros SET " . implode(", ", $campos) . " WHERE id_viajero = ?";
                 $stmt = $this->pdo->prepare($sql);
                 $stmt->execute($valores);
+    
+                $_SESSION['mensaje'] = "✅ Usuario actualizado correctamente.";
+            } else {
+                $_SESSION['error'] = "⚠️ No se enviaron campos para actualizar.";
             }
-
+    
             header("Location: $redirect");
             exit();
+    
         } catch (PDOException $e) {
-            echo "Error al actualizar el cliente: " . $e->getMessage();
+            $_SESSION['error'] = "❌ Error al actualizar el cliente: " . $e->getMessage();
+            header("Location: /admin/usuarios/editar?id=" . $id);
+            exit();
         }
     }
+    
 
+    
     public function login($data)
     {
         $correo = $data['correo'];
@@ -207,7 +228,10 @@ class ClienteController
             // Actualizar sesión si el correo ha cambiado
             $_SESSION['email'] = $email;
 
-            echo "Perfil actualizado correctamente.";
+            $_SESSION['mensaje'] = "Perfil actualizado correctamente.";
+
+            header("Location: /cliente/perfil");
+            exit;
 
         } catch (PDOException $e) {
             echo "Error al actualizar el perfil: " . $e->getMessage();

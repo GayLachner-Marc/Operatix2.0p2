@@ -237,22 +237,100 @@ switch ($uri) {
         }
         break;
 
-    case '/admin/usuarios/editar':
-        $controller = new ClienteController();
-        if ($method === 'GET' && isset($_GET['id'])) {
-            $cliente = $controller->obtenerClientePorId($_GET['id']);
-            include BASE_PATH . '/app/mvc/views/Admin/editar_usuario.php';
-        } elseif ($method === 'POST') {
-            $controller->modificarCliente($_POST['id'], $_POST, '/admin/usuarios');
-        }
-        break;
-
+        case '/admin/usuarios/editar':
+            $controller = new ClienteController();
+        
+            if ($method === 'GET' && isset($_GET['id'])) {
+                $cliente = $controller->obtenerClientePorId($_GET['id']);
+                $usuario = $cliente; // ⬅️ importante para que la vista lo reciba
+                include BASE_PATH . '/app/mvc/views/Admin/editar_usuario.php';
+        
+            } elseif ($method === 'POST') {
+                if (!isset($_POST['id']) || empty($_POST['id'])) {
+                    $_SESSION['error'] = "❌❌ ID de usuario no proporcionado.";
+                    header("Location: /admin/usuarios");
+                    exit();
+                }
+                $controller->modificarCliente($_POST['id'], $_POST, '/admin/usuarios');
+            }
+            break;
+        
     case '/admin/usuarios/eliminar':
         if (isset($_GET['id']) && $_SESSION['tipo_cliente'] === 'administrador') {
             $controller = new ClienteController();
             $controller->eliminarCliente($_GET['id']);
         }
         break;
+
+    case '/admin/hoteles':
+         if ($_SESSION['tipo_cliente'] === 'administrador') {
+            $controller = new HotelController($pdo);
+            $hoteles = $controller->listarHoteles();
+            include BASE_PATH . '/app/mvc/views/Reservas/gestionar_hoteles.php';
+        } else {
+            header("Location: /cliente/login");
+            exit();
+        }
+         break;
+        
+    case '/admin/hoteles/crear':
+        if ($_SESSION['tipo_cliente'] === 'administrador') {
+            $controller = new HotelController($pdo);
+            $zonas = $controller->obtenerZonas(); 
+            if ($method === 'POST') {
+                 $controller->registrarHotel($_POST);
+            } else {
+                  include BASE_PATH . '/app/mvc/views/Reservas/crear_hotel.php';
+            }
+        }
+        break;
+
+    case '/admin/hoteles/editar':
+        if ($_SESSION['tipo_cliente'] === 'administrador') {
+             $controller = new HotelController($pdo);
+             $zonas = $controller->obtenerZonas();
+            if ($method === 'GET' && isset($_GET['id'])) {
+                 $hotel = $controller->verHotel($_GET['id']);
+                include BASE_PATH . '/app/mvc/views/Reservas/editar_hotel.php';
+            } elseif ($method === 'POST') {
+                $controller->actualizarHotel($_POST);
+            }
+        }
+        break;
+
+    case '/admin/hoteles/eliminar':
+        if ($_SESSION['tipo_cliente'] === 'administrador' && isset($_GET['id'])) {
+            $controller = new HotelController($pdo);
+            $controller->eliminarHotel($_GET['id']);
+        }
+        break;
+        
+        case '/admin/reportes':
+            if ($_SESSION['tipo_cliente'] === 'administrador') {
+                $hotelController = new HotelController($pdo);
+                $reservaController = new ReservaController($pdo);
+        
+                // Datos para tablas
+                $ultimosHoteles = $hotelController->obtenerUltimosHoteles(); 
+                $ultimasReservas = $reservaController->obtenerUltimasReservas();
+        
+                // Datos para el resumen
+                $totalReservas = $reservaController->contarTotalReservas();
+                $totalHoteles = $hotelController->contarTotalHoteles();
+                $zonaMasReservada = $reservaController->obtenerZonaMasReservada();
+        
+                // Datos para la tabla de reservas por día
+                $reservasPorDia = $reservaController->obtenerReservasPorDia(7);
+        
+                include BASE_PATH . '/app/mvc/views/Admin/reportes_actividad.php';
+            } else {
+                header("Location: /cliente/login");
+                exit();
+            }
+            break;
+        
+            
+        
         
     default:
         include BASE_PATH . '/app/mvc/views/Reservas/en_construccion.php';
