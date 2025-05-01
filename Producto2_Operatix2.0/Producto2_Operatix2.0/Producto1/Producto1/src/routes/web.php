@@ -1,6 +1,6 @@
 <?php
 
-<?php
+
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -17,12 +17,7 @@ use App\Http\Controllers\ReporteController;
 
 // 🔧 Ruta de prueba DB
 Route::get('/', function () {
-    try {
-        DB::connection()->getPdo();
-        return "✅ Conexión exitosa a la base de datos.";
-    } catch (\Exception $e) {
-        return "❌ Error de conexión: " . $e->getMessage();
-    }
+    return redirect()->route('login.form');
 });
 
 // 🧱 Página en construcción
