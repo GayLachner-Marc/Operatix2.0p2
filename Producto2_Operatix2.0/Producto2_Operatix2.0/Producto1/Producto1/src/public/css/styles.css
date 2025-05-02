@@ -946,3 +946,13 @@ button[type="submit"]:hover {
   background-color: #3c963c;
 }
 
+.formulario-container {
+  background-color: #f0fff0;
+  padding: 2rem;
+  border-radius: 10px;
+  width: 60%;
+  margin: 2rem auto;
+  position: relative;
+  z-index: 1;
+}
+

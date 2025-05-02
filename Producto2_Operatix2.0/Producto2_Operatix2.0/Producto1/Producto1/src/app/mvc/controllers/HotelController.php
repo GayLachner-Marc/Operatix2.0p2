@@ -1,5 +1,4 @@
 <?php
-// Incluir el modelo de Hotel para interactuar con la base de datos
 namespace app\mvc\controllers;
 
 use PDO;
@@ -17,7 +16,6 @@ class HotelController
         $this->pdo = $pdo;
     }
 
-    // Listar todos los hoteles
     public function listarHoteles()
     {
         try {
@@ -29,7 +27,6 @@ class HotelController
         }
     }
 
-    // Ver detalles de un hotel específico
     public function verHotel($id_hotel)
     {
         try {
@@ -42,46 +39,42 @@ class HotelController
         }
     }
 
-    // Registrar un nuevo hotel
     public function registrarHotel($data)
-{
-    if (!isset($data['id_zona'], $data['comision'], $data['usuario'], $data['password'])) {
-        echo "Faltan datos necesarios.";
-        return;
+    {
+        if (!isset($data['id_zona'], $data['comision'], $data['usuario'], $data['password'])) {
+            echo "Faltan datos necesarios.";
+            return;
+        }
+
+        try {
+            $stmt = $this->pdo->prepare("INSERT INTO tranfer_hotel (id_zona, Comision, usuario, password) VALUES (?, ?, ?, ?)");
+            $stmt->execute([
+                $data['id_zona'],
+                $data['comision'],
+                $data['usuario'],
+                password_hash($data['password'], PASSWORD_DEFAULT)
+            ]);
+
+            $_SESSION['mensaje'] = "Hotel registrado con éxito.";
+            header('Location: /admin/hoteles');
+            exit();
+        } catch (PDOException $e) {
+            echo "Error al registrar el hotel: " . $e->getMessage();
+        }
     }
 
-    try {
-        $stmt = $this->pdo->prepare("INSERT INTO tranfer_hotel (id_zona, Comision, usuario, password) VALUES (?, ?, ?, ?)");
-        $stmt->execute([
-            $data['id_zona'],
-            $data['comision'],
-            $data['usuario'],
-            password_hash($data['password'], PASSWORD_DEFAULT)
-        ]);
-
-        $_SESSION['mensaje'] = "Hotel registrado con éxito.";
-        header('Location: /admin/hoteles');
-        exit();
-    } catch (PDOException $e) {
-        echo "Error al registrar el hotel: " . $e->getMessage();
-    }
-}
-
-
-    // Actualizar un hotel existente
     public function actualizarHotel($data)
     {
         if (!isset($data['id_hotel'], $data['id_zona'], $data['comision'], $data['usuario'])) {
             echo "Faltan datos para actualizar el hotel.";
             return;
         }
-    
+
         try {
-            // Obtener la contraseña actual si no se modifica
             $password = !empty($data['password'])
                 ? password_hash($data['password'], PASSWORD_DEFAULT)
                 : $this->verHotel($data['id_hotel'])['password'];
-    
+
             $stmt = $this->pdo->prepare("UPDATE tranfer_hotel SET id_zona = ?, Comision = ?, usuario = ?, password = ? WHERE id_hotel = ?");
             $stmt->execute([
                 $data['id_zona'],
@@ -90,7 +83,7 @@ class HotelController
                 $password,
                 $data['id_hotel']
             ]);
-    
+
             $_SESSION['mensaje'] = "Hotel actualizado con éxito.";
             header('Location: /admin/hoteles');
             exit();
@@ -98,7 +91,7 @@ class HotelController
             echo "Error al actualizar el hotel: " . $e->getMessage();
         }
     }
-    
+
     public function obtenerZonas()
     {
         try {
@@ -128,8 +121,7 @@ class HotelController
             return [];
         }
     }
-    
-        // Total de hoteles
+
     public function contarTotalHoteles()
     {
         try {
@@ -140,7 +132,6 @@ class HotelController
         }
     }
 
-    // Eliminar un hotel
     public function eliminarHotel($id_hotel)
     {
         try {
@@ -153,4 +144,75 @@ class HotelController
             echo "Error al eliminar el hotel: " . $e->getMessage();
         }
     }
+
+    public function verPanelHotel()
+{
+    if (!isset($_SESSION['usuario'])) {
+        echo "No estás logueado.";
+        return;
+    }
+
+    $hotel = $_SESSION['usuario'];
+    $idHotel = $hotel['id_hotel'];
+    $comision = $hotel['Comision'] ?? 10;
+
+    try {
+        $stmt = $this->pdo->prepare("
+            SELECT fecha_reserva, precio 
+            FROM transfer_reservas 
+            WHERE id_hotel = :id OR id_destino = :id
+        ");
+        $stmt->execute(['id' => $idHotel]);
+        $reservas = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $comisionesPorMes = [];
+        foreach ($reservas as $reserva) {
+            $mes = date('Y-m', strtotime($reserva['fecha_reserva']));
+            $importe = $reserva['precio'] * ($comision / 100);
+            if (!isset($comisionesPorMes[$mes])) {
+                $comisionesPorMes[$mes] = 0;
+            }
+            $comisionesPorMes[$mes] += $importe;
+        }
+        
+
+        require_once BASE_PATH . "/app/mvc/views/Reservas/home_hotel.php";
+
+
+    } catch (PDOException $e) {
+        echo "Error al obtener reservas: " . $e->getMessage();
+    }
+}
+
+
+public function loginHotel($data)
+{
+    if (!isset($data['usuario'], $data['password'])) {
+        echo "Faltan usuario o contraseña.";
+        return;
+    }
+
+    try {
+        $stmt = $this->pdo->prepare("SELECT * FROM tranfer_hotel WHERE usuario = ?");
+        $stmt->execute([$data['usuario']]);
+        $hotel = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($hotel && password_verify($data['password'], $hotel['password'])) {
+            $_SESSION['tipo_cliente'] = 'hotel';
+            $_SESSION['cliente_id'] = $hotel['id_hotel']; // ✅ Añade esto
+            $_SESSION['usuario'] = [
+                'id_hotel' => $hotel['id_hotel'],
+                'Comision' => $hotel['Comision'],
+                'usuario' => $hotel['usuario']
+            ];
+            header('Location: /hotel/home');
+            exit();
+        } else {
+            echo "Credenciales incorrectas.";
+        }
+    } catch (PDOException $e) {
+        echo "Error en el login del hotel: " . $e->getMessage();
+    }
+}
+
 }

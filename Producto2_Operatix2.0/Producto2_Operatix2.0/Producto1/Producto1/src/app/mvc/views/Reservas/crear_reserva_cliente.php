@@ -40,6 +40,10 @@ $volver_url = ($tipo_cliente === 'administrador') ? '/admin/home' : '/cliente/ho
                 <label for="num_viajeros">Número de Viajeros:</label>
                 <input type="number" id="num_viajeros" name="num_viajeros" required min="1">
 
+                <label for="precio">Precio del Servicio (€):</label>
+                <input type="number" id="precio" name="precio" step="0.01" min="0" required>
+
+
                 <label for="id_hotel">Hotel de Destino:</label>
                 <select id="id_hotel" name="id_hotel" required>
                     <option value="1">Hotel Playa</option>
