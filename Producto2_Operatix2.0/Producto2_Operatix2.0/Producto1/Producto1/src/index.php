@@ -59,13 +59,16 @@ switch ($uri) {
         break;
 
     case '/hotel/home':
-        if (isset($_SESSION['cliente_id']) && $_SESSION['tipo_cliente'] === 'hotel') {
-            include BASE_PATH . '/app/mvc/views/Reservas/home_hotel.php';
+        if (isset($_SESSION['tipo_cliente']) && $_SESSION['tipo_cliente'] === 'hotel') {
+            $controller = new HotelController($pdo);
+            $controller->verPanelHotel();
         } else {
-            header('Location: /cliente/login');
+            header('Location: /hotel/login');
             exit();
         }
         break;
+        
+        
 
     case '/cliente/editar':
         if ($method === 'POST' && isset($_SESSION['cliente_id'])) {
@@ -171,13 +174,14 @@ switch ($uri) {
         break;
 
     case '/admin/home':
-        if (isset($_SESSION['cliente_id']) && $_SESSION['tipo_cliente'] === 'administrador') {
+        if (isset($_SESSION['tipo_cliente']) && $_SESSION['tipo_cliente'] === 'administrador') {
             include BASE_PATH . '/app/mvc/views/Admin/home_admin.php';
         } else {
             header('Location: /cliente/login');
             exit();
         }
         break;
+        
 
     case '/admin/vehiculos':
         if ($_SESSION['tipo_cliente'] === 'administrador') {
@@ -305,31 +309,89 @@ switch ($uri) {
         }
         break;
         
-        case '/admin/reportes':
-            if ($_SESSION['tipo_cliente'] === 'administrador') {
-                $hotelController = new HotelController($pdo);
-                $reservaController = new ReservaController($pdo);
-        
-                // Datos para tablas
-                $ultimosHoteles = $hotelController->obtenerUltimosHoteles(); 
-                $ultimasReservas = $reservaController->obtenerUltimasReservas();
-        
-                // Datos para el resumen
-                $totalReservas = $reservaController->contarTotalReservas();
-                $totalHoteles = $hotelController->contarTotalHoteles();
-                $zonaMasReservada = $reservaController->obtenerZonaMasReservada();
-        
-                // Datos para la tabla de reservas por día
-                $reservasPorDia = $reservaController->obtenerReservasPorDia(7);
-        
-                include BASE_PATH . '/app/mvc/views/Admin/reportes_actividad.php';
-            } else {
-                header("Location: /cliente/login");
-                exit();
-            }
-            break;
-        
+    case '/admin/reportes':
+        if ($_SESSION['tipo_cliente'] === 'administrador') {
+            $hotelController = new HotelController($pdo);
+            $reservaController = new ReservaController($pdo);
+    
+            // Datos para tablas
+            $ultimosHoteles = $hotelController->obtenerUltimosHoteles(); 
+            $ultimasReservas = $reservaController->obtenerUltimasReservas();
+    
+            // Datos para el resumen
+            $totalReservas = $reservaController->contarTotalReservas();
+            $totalHoteles = $hotelController->contarTotalHoteles();
+            $zonaMasReservada = $reservaController->obtenerZonaMasReservada();
+    
+            // Datos para la tabla de reservas por día
+            $reservasPorDia = $reservaController->obtenerReservasPorDia(7);
+    
+            include BASE_PATH . '/app/mvc/views/Admin/reportes_actividad.php';
+        } else {
+            header("Location: /cliente/login");
+            exit();
+        }
+        break;
+
+    case '/hotel/login':
+        $controller = new HotelController($pdo);
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $controller->loginHotel($_POST);
+        } else {
+            include BASE_PATH . '/app/mvc/views/Clientes/login_hotel.php';
+        }
+        break;
+
+    case '/hotel/reservas':
+        if (isset($_SESSION['usuario']) && $_SESSION['tipo_cliente'] === 'hotel') {
+            $reservaController = new ReservaController($pdo);
+            $idHotel = $_SESSION['usuario']['id_hotel'];
+            $reservas = $reservaController->listarReservasPorHotel($idHotel);
+            include BASE_PATH . '/app/mvc/views/Reservas/listar_reservas_hotel.php';
+        } else {
+            header('Location: /cliente/login');
+            exit();
+        }
+        break;
+    
+    
+    case '/hotel/crear_reserva':
+        if (isset($_SESSION['tipo_cliente']) && $_SESSION['tipo_cliente'] === 'hotel') {
+            $controller = new ReservaController($pdo);
             
+            if ($method === 'POST') {
+                $controller->crearReserva($_POST);
+            } else {
+                include BASE_PATH . '/app/mvc/views/Reservas/crear_reserva_hotel.php';
+            }
+        } else {
+            header("Location: /cliente/login");
+            exit();
+        }
+        break;
+        
+    
+    case '/hotel/perfil':
+        if (isset($_SESSION['cliente_id']) && $_SESSION['tipo_cliente'] === 'hotel') {
+            $controller = new HotelController($pdo);
+            $hotel = $controller->verHotel($_SESSION['usuario']['id_hotel']);
+            include BASE_PATH . '/app/mvc/views/Reservas/perfil_hotel.php';
+        } else {
+            header('Location: /cliente/login');
+            exit();
+        }
+        break;
+    
+    case '/hotel/perfil/editar':
+        if ($method === 'POST' && $_SESSION['tipo_cliente'] === 'hotel') {
+            $controller = new HotelController($pdo);
+            $controller->actualizarHotel($_POST);
+            header('Location: /hotel/perfil');
+            exit();
+        }
+        break;
+    
+    
         
         
     default:

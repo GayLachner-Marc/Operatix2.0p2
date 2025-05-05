@@ -22,6 +22,7 @@ class ReservaController extends Controller
     // Crear una nueva reserva
     public function crearReserva(Request $request)
     {
+        
         // Validar los datos recibidos
         $request->validate([
             'id_hotel' => 'required|integer',
@@ -31,6 +32,7 @@ class ReservaController extends Controller
             'hora_entrada' => 'nullable|date_format:H:i',
             'num_viajeros' => 'required|integer|min:1',
             'numero_vuelo_entrada' => 'required|string',
+            
         ]);
 
         try {
@@ -157,4 +159,6 @@ class ReservaController extends Controller
 
         return $zona ?: ['nombre_zona' => 'N/D', 'total' => 0];
     }
+   
+
 }

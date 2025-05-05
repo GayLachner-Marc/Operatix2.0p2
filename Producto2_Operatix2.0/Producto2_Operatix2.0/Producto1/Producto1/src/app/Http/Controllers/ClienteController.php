@@ -20,7 +20,7 @@ class ClienteController extends Controller
             'codigoPostal' => 'required|string|max:10',
             'ciudad' => 'required|string|max:255',
             'pais' => 'required|string|max:255',
-            'email' => 'required|email|unique:clientes,email',
+            'email' => 'required|email|unique:transfer_viajeros,email',
             'password' => 'required|string|min:8|confirmed',
             'tipo_cliente' => 'required|string'
         ]);
@@ -38,8 +38,12 @@ class ClienteController extends Controller
             'password' => Hash::make($request->password),
             'tipo_cliente' => $request->tipo_cliente,
         ]);
+        // Asegúrate de que se esté creando correctamente
+            Log::info('Nuevo cliente creado: ', ['cliente' => $cliente]);
+            dd('Cliente creado:', $cliente);  // Esto se detendrá y te mostrará la info del cliente
+            
+            return redirect()->route('cliente.login')->with('success', 'Cliente registrado con éxito. ¡Ahora puedes iniciar sesión!');
 
-        return redirect()->route('cliente.login')->with('success', 'Cliente registrado con éxito. ¡Ahora puedes iniciar sesión!');
     }
 
     // Método para obtener un cliente por su ID
@@ -151,6 +155,14 @@ class ClienteController extends Controller
         // Actualizamos la sesión
         session(['email' => $cliente->email]);
 
-        return redirect()->route('cliente.perfil')->with('success', 'Perfil actualizado correctamente.');
+        return redirect()->route('clientes.perfil')->with('success', 'Perfil actualizado correctamente.');
     }
+    public function formRegistro()
+{
+    return view('Clientes.registro'); // Ajusta el nombre según tu estructura de vistas
+}
+public function showLogin()
+{
+    return view('Clientes.login'); // Ajusta según el nombre de tu vista de login
+}
 }

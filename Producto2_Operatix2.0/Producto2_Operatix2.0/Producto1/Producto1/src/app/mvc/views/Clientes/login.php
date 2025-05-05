@@ -5,17 +5,23 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Redirección automática si ya está logueado
 if (isset($_SESSION['tipo_cliente'])) {
-    if ($_SESSION['tipo_cliente'] === 'administrador') {
-        header("Location: /admin/home");
-        exit;
-    } elseif ($_SESSION['tipo_cliente'] === 'corporativo') {
-        header("Location: /cliente/home");
-        exit;
-    } else {
-        header("Location: /cliente/home");
-        exit;
+    switch ($_SESSION['tipo_cliente']) {
+        case 'administrador':
+            header("Location: /admin/home");
+            break;
+        case 'corporativo':
+        case 'particular':
+            header("Location: /cliente/home");
+            break;
+        case 'hotel':
+            header("Location: /hotel/home");
+            break;
+        default:
+            header("Location: /cliente/login");
     }
+    exit;
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -57,17 +63,23 @@ if (isset($_SESSION['tipo_cliente'])) {
             <p class="register-link">
                 ¿No tienes cuenta? <a href="/cliente/registro">Regístrate aquí</a>
             </p>
+
+            <!-- 🏨 Acceso para usuarios de hotel -->
+            <p class="register-link">
+                ¿Eres un hotel? <a href="/hotel/login">Inicia sesión como hotel</a>
+            </p>
         </form>
     </div>
+
     <script>
-    setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if (alert) {
-            alert.style.opacity = '0';
-            alert.style.transition = 'opacity 0.5s ease';
-            setTimeout(() => alert.remove(), 500);
-        }
-    }, 4000);
-</script>
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if (alert) {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => alert.remove(), 500);
+            }
+        }, 4000);
+    </script>
 </body>
 </html>

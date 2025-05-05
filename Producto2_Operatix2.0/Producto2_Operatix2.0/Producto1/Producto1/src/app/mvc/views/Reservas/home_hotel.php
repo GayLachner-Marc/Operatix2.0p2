@@ -30,5 +30,17 @@ if (!isset($_SESSION['cliente_id']) || $_SESSION['tipo_cliente'] !== 'hotel') {
 
     <p><a href="/cliente/logout">Cerrar sesión</a></p>
 
+        <h3>Resumen de comisiones mensuales</h3>
+    <ul>
+        <?php if (!empty($comisionesPorMes)): ?>
+            <?php foreach ($comisionesPorMes as $mes => $importe): ?>
+                <li><?= $mes ?>: <?= number_format($importe, 2) ?> €</li>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <li>No tienes comisiones registradas aún.</li>
+        <?php endif; ?>
+    </ul>
+
+
 </body>
 </html>

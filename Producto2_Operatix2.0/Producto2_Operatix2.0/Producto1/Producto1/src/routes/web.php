@@ -30,7 +30,7 @@ Route::post('/login', [AuthController::class, 'login'])->name('login');
 // 👤 Cliente: Registro, Login, Panel, Perfil
 Route::prefix('cliente')->group(function () {
     Route::get('/registro', [ClienteController::class, 'formRegistro'])->name('cliente.registro.form');
-    Route::post('/registro', [ClienteController::class, 'registrar'])->name('cliente.registro');
+    Route::post('/registro', [ClienteController::class, 'registrarCliente'])->name('cliente.registro');
     
     Route::get('/login', [ClienteController::class, 'showLogin'])->name('cliente.login');
     Route::post('/login', [ClienteController::class, 'login']);
